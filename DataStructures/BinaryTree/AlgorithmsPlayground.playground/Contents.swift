@@ -21,28 +21,30 @@ class TreeNode {
     return isBST(self, minValue: Int.min, maxValue: Int.max)
   }
 
-  func delete(value: Int) {
-
+  func delete(value: Int) -> TreeNode? {
+    return delete(value, node: self)
   }
 
   func delete(value: Int, node: TreeNode?) -> TreeNode? {
     guard let node = node else { return nil }
     if value == node.value {
-      if node.left == nil && node.right == nil {
-        return nil
-      } else {
-        if let left = node.left, right = node.right {
-          let maxNodeOnLeftSubtree = findMax(node.left)
-          node.value = maxNodeOnLeftSubtree.value
-          delete(maxNodeOnLeftSubtree.value, maxNodeOnLeftSubtree)
+      if let left = node.left, _ = node.right {
+        let (maxNodeOnLeftSubtree, parentNode) = left.findMax(node)
+        node.value = maxNodeOnLeftSubtree.value
+        if parentNode === node {
+          node.left = delete(maxNodeOnLeftSubtree.value, node: maxNodeOnLeftSubtree)
         } else {
-          if let left = node.left {
-            node.left = nil
-            return left
-          } else if let right = node.right {
-            node.right = nil
-            return right
-          }
+          parentNode.right = delete(maxNodeOnLeftSubtree.value, node: maxNodeOnLeftSubtree)
+        }
+      } else {
+        if let left = node.left {
+          node.left = nil
+          return left
+        } else if let right = node.right {
+          node.right = nil
+          return right
+        } else {
+          return nil
         }
       }
     } else if value < node.value {
@@ -57,7 +59,7 @@ class TreeNode {
     guard let node = node else { return true }
     if node.value < minValue || node.value > maxValue { return false }
     return isBST(node.left, minValue: minValue, maxValue: node.value)
-        && isBST(node.right, minValue: node.value, maxValue: maxValue)
+      && isBST(node.right, minValue: node.value, maxValue: maxValue)
   }
 
   func insert(value: Int, node: TreeNode?) -> TreeNode {
@@ -88,12 +90,16 @@ class TreeNode {
 }
 
 extension TreeNode {
-  func findMax(node: TreeNode?, maxValue: Int) -> TreeNode? {
-    guard let node = node { return nil }
-    if node.value > maxValue {
-
+  func findMax(parentNode: TreeNode!) -> (TreeNode!, TreeNode!) {
+    var node = self
+    var parentNode = parentNode
+    while node.right != nil {
+      parentNode = node
+      node = node.right!
     }
+    return (node, parentNode)
   }
+
   func generateTree() {
     insert(2)
     insert(6)
@@ -105,10 +111,10 @@ extension TreeNode {
     insert(8)
   }
 
-  func printTree() {
+  func printTree() -> String {
     var resultString = ""
     printTree(self, resultString: &resultString)
-    print(resultString)
+    return resultString
   }
 
   func printTree(currentNode: TreeNode?, inout resultString: String) {
@@ -117,10 +123,20 @@ extension TreeNode {
     resultString += "\(currentNode.value) "
     printTree(currentNode.right, resultString: &resultString)
   }
-  
+
 }
 
-let root = TreeNode(value: 5)
-root.generateTree()
-root.printTree()
-print(root.isBST())
+var root: TreeNode? = TreeNode(value: 5)
+root?.generateTree()
+print(root?.printTree())
+print(root?.isBST())
+root = root?.delete(3)
+root = root?.delete(5)
+root = root?.delete(7)
+root = root?.delete(6)
+root = root?.delete(2)
+root = root?.delete(1)
+root = root?.delete(9)
+root = root?.delete(8)
+root = root?.delete(4)
+print(root)
